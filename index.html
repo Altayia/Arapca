@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arapça Günlük Deyimler Sözlüğü</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --primary-color: #2c3e50;
+            --accent-color: #16a085;
+            --text-dark: #2c3e50;
+            --text-muted: #7f8c8d;
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 3px solid var(--accent-color);
+        }
+
+        header h1 {
+            font-size: 28px;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .search-container {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(22, 160, 133, 0.1);
+        }
+
+        .stats {
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .dict-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .dict-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03);
+            border: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .dict-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.06);
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .arabic-text {
+            font-size: 67px;
+            font-weight: 700;
+            color: #111;
+            direction: rtl;
+            font-family: 'Traditional Arabic', 'Amiri', 'Noto Naskh Arabic', serif;
+            margin-bottom: 5px;
+        }
+
+        .pronunciation {
+            font-size: 15px;
+            color: var(--accent-color);
+            font-weight: 600;
+            font-style: italic;
+        }
+
+        .meaning {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .description {
+            font-size: 14px;
+            color: var(--text-muted);
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border-left: 3px solid #cbd5e1;
+        }
+
+        .play-btn {
+            background-color: #e6f4ea;
+            color: var(--accent-color);
+            border: none;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            font-size: 22px;
+        }
+
+        .play-btn:hover {
+            background-color: var(--accent-color);
+            color: #fff;
+            transform: scale(1.08);
+        }
+
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Status bar for current playing */
+        .now-playing {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: none;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 600px) {
+            .dict-card {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .arabic-text {
+                text-align: center;
+            }
+            .play-btn {
+                margin: 10px auto 0 auto;
+            }
+            .description {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Arapça Günlük Deyimler Sözlüğü</h1>
+        <p>Hücre bağlantı uyarısı olmadan lokal olarak ses dosyalarını dinleyebilirsiniz.</p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Arapça, okunuş, anlam veya açıklamalarda arayın...">
+    </div>
+
+    <div class="stats" id="statsCount">Toplam 27 deyim listeleniyor</div>
+
+    <div class="dict-list" id="dictList">
+
+        <div class="dict-card" data-search="على راسي ala rasi başımın üzerinde "başım gözüm üstüne" anlamında, bir rica veya istek seve seve kabul edildiğinde, karşıdaki kişiye duyulan saygıyı göstermek için kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">على راسي</div>
+                <div class="pronunciation">🗣️ Ala rasi</div>
+                <div class="meaning">💡 Başımın üzerinde</div>
+                <div class='description'>"Başım gözüm üstüne" anlamında, bir rica veya istek seve seve kabul edildiğinde, karşıdaki kişiye duyulan saygıyı göstermek için kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/على_راسي.mp3', 'على راسي')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="من عيوني min uyuni gözlerimden "gözüm gibi bakarım" veya "memnuniyetle yaparım" anlamında, birine verilen sözün ve kabul edilen ricanın içtenliğini vurgular.">
+            <div class="card-content">
+                <div class="arabic-text">من عيوني</div>
+                <div class="pronunciation">🗣️ Min uyuni</div>
+                <div class="meaning">💡 Gözlerimden</div>
+                <div class='description'>"Gözüm gibi bakarım" veya "Memnuniyetle yaparım" anlamında, birine verilen sözün ve kabul edilen ricanın içtenliğini vurgular.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/من_عيوني.mp3', 'من عيوني')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="دمه خفيف dammo khafiif kanı sıcak / sempatik sempatik, eğlenceli, cana yakın, şakacı ve girdiği ortamı neşelendiren kişiler için kullanılan çok yaygın bir sıfattır.">
+            <div class="card-content">
+                <div class="arabic-text">دمه خفيف</div>
+                <div class="pronunciation">🗣️ Dammo khafiif</div>
+                <div class="meaning">💡 Kanı sıcak / sempatik</div>
+                <div class='description'>Sempatik, eğlenceli, cana yakın, şakacı ve girdiği ortamı neşelendiren kişiler için kullanılan çok yaygın bir sıfattır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/دمه_خفيف.mp3', 'دمه خفيف')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="دمه ثقيل dammo t'iil kanı soğuk / i̇tici sempatik olmayan, sıkıcı veya yanındayken insanın içini bayan insanlar için kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">دمه ثقيل</div>
+                <div class="pronunciation">🗣️ Dammo t'iil</div>
+                <div class="meaning">💡 Kanı soğuk / İtici</div>
+                <div class='description'>Sempatik olmayan, sıkıcı veya yanındayken insanın içini bayan insanlar için kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/دمه_ثقيل.mp3', 'دمه ثقيل')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="شو في ما في؟ şu fi ma fi? ne var ne yok? gündelik hayatta yolda karşılaşıldığında "nasılsın, hayat nasıl gidiyor, ne haber?" anlamında kullanılan en standart selamlama kalıplarından biridir.">
+            <div class="card-content">
+                <div class="arabic-text">شو في ما في؟</div>
+                <div class="pronunciation">🗣️ Şu fi ma fi?</div>
+                <div class="meaning">💡 Ne var ne yok?</div>
+                <div class='description'>Gündelik hayatta yolda karşılaşıldığında "Nasılsın, hayat nasıl gidiyor, ne haber?" anlamında kullanılan en standart selamlama kalıplarından biridir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/شو_في_ما_في.mp3', 'شو في ما في؟')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="ولا يهمك va la yihemmek senin için önemli olmasın "kafana takma", "dert etme", "hiç önemli değil" anlamlarında teselli vermek, rahatlatmak veya bir özrü nazikçe kabul etmek için kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">ولا يهمك</div>
+                <div class="pronunciation">🗣️ Va la yihemmek</div>
+                <div class="meaning">💡 Senin için önemli olmasın</div>
+                <div class='description'>"Kafana takma", "Dert etme", "Hiç önemli değil" anlamlarında teselli vermek, rahatlatmak veya bir özrü nazikçe kabul etmek için kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/ولا_يهمك.mp3', 'ولا يهمك')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="هلا والله hala vallah allah'a yemin olsun hoş geldin çok sıcak ve samimi bir karşılama ifadesidir. "hoş geldin, sefalar getirdin" anlamında, misafiri veya arkadaşı karşılarken içtenlikle söylenir.">
+            <div class="card-content">
+                <div class="arabic-text">هلا والله</div>
+                <div class="pronunciation">🗣️ Hala vallah</div>
+                <div class="meaning">💡 Allah'a yemin olsun hoş geldin</div>
+                <div class='description'>Çok sıcak ve samimi bir karşılama ifadesidir. "Hoş geldin, sefalar getirdin" anlamında, misafiri veya arkadaşı karşılarken içtenlikle söylenir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/هلا_والله.mp3', 'هلا والله')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="يا زلمة ya zeleme ey adam "ya kardeşim", "adamım" veya durumun bağlamına göre şaşkınlık belirtmek için "yok artık" anlamında, dostlar arasında sürekli kullanılan bir hitaptır.">
+            <div class="card-content">
+                <div class="arabic-text">يا زلمة</div>
+                <div class="pronunciation">🗣️ Ya zeleme</div>
+                <div class="meaning">💡 Ey adam</div>
+                <div class='description'>"Ya kardeşim", "Adamım" veya durumun bağlamına göre şaşkınlık belirtmek için "Yok artık" anlamında, dostlar arasında sürekli kullanılan bir hitaptır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/يا_زلمة.mp3', 'يا زلمة')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="طويل البال taviil el-bal sabırlı / geniş canlı çok sabırlı, olaylar karşısında kolay sinirlenmeyen, geniş, sakin ve anlayışlı kişiler için kullanılan bir övgü sözüdür.">
+            <div class="card-content">
+                <div class="arabic-text">طويل البال</div>
+                <div class="pronunciation">🗣️ Taviil el-bal</div>
+                <div class="meaning">💡 Sabırlı / Geniş canlı</div>
+                <div class='description'>Çok sabırlı, olaylar karşısında kolay sinirlenmeyen, geniş, sakin ve anlayışlı kişiler için kullanılan bir övgü sözüdür.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/طويل_البال.mp3', 'طويل البال')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="وجع رأس weca' ras baş ağrısı gerçek anlamının dışında, mecazi olarak bitmeyen dert, büyük sıkıntı, bela veya çok kafa ütüleyen durumlar/insanlar için kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">وجع رأس</div>
+                <div class="pronunciation">🗣️ Weca' ras</div>
+                <div class="meaning">💡 Baş ağrısı</div>
+                <div class='description'>Gerçek anlamının dışında, mecazi olarak bitmeyen dert, büyük sıkıntı, bela veya çok kafa ütüleyen durumlar/insanlar için kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/وجع_رأس.mp3', 'وجع رأس')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="صحتين sahteyn i̇ki sağlık yemek yiyen veya bir şeyler içen birine "afiyet olsun" demek için kullanılır. kelime anlamı kişiye çifte sağlık dilemektir.">
+            <div class="card-content">
+                <div class="arabic-text">صحتين</div>
+                <div class="pronunciation">🗣️ Sahteyn</div>
+                <div class="meaning">💡 İki sağlık</div>
+                <div class='description'>Yemek yiyen veya bir şeyler içen birine "Afiyet olsun" demek için kullanılır. Kelime anlamı kişiye çifte sağlık dilemektir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/صحتين.mp3', 'صحتين')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="الله معك allah ma'ak allah seninle vedalaşırken söylenen, "allah'a ısmarladık", "yolun açık olsun", "güle güle" anlamına gelen en temel iyi dilek ifadesidir.">
+            <div class="card-content">
+                <div class="arabic-text">الله معك</div>
+                <div class="pronunciation">🗣️ Allah ma'ak</div>
+                <div class="meaning">💡 Allah seninle</div>
+                <div class='description'>Vedalaşırken söylenen, "Allah'a ısmarladık", "Yolun açık olsun", "Güle güle" anlamına gelen en temel iyi dilek ifadesidir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/الله_معك.mp3', 'الله معك')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="على فكرة ala fikra fikir üzerine konuşma esnasında konu değiştirirken, araya girerken veya bir ekleme yaparken "bu arada", "aklıma gelmişken" anlamında köprü vazifesi görür.">
+            <div class="card-content">
+                <div class="arabic-text">على فكرة</div>
+                <div class="pronunciation">🗣️ Ala fikra</div>
+                <div class="meaning">💡 Fikir üzerine</div>
+                <div class='description'>Konuşma esnasında konu değiştirirken, araya girerken veya bir ekleme yaparken "Bu arada", "Aklıma gelmişken" anlamında köprü vazifesi görür.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/على_فكرة.mp3', 'على فكرة')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="ابن حلال i̇bn helal helal oğlu "helal süt emmiş", dürüst, sözüne güvenilir, kötülük düşünmeyen ve iyi niyetli insanlar için kullanılan bir takdir sözüdür.">
+            <div class="card-content">
+                <div class="arabic-text">ابن حلال</div>
+                <div class="pronunciation">🗣️ İbn helal</div>
+                <div class="meaning">💡 Helal oğlu</div>
+                <div class='description'>"Helal süt emmiş", dürüst, sözüne güvenilir, kötülük düşünmeyen ve iyi niyetli insanlar için kullanılan bir takdir sözüdür.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/ابن_حلال.mp3', 'ابن حلال')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="خلص hallas / halas bitti "yeter", "tamam", "konu kapandı" anlamlarında, bir durumu, muhabbeti veya tartışmayı kesin bir şekilde sonlandırmak için telaffuz edilir.">
+            <div class="card-content">
+                <div class="arabic-text">خلص</div>
+                <div class="pronunciation">🗣️ Hallas / Halas</div>
+                <div class="meaning">💡 Bitti</div>
+                <div class='description'>"Yeter", "Tamam", "Konu kapandı" anlamlarında, bir durumu, muhabbeti veya tartışmayı kesin bir şekilde sonlandırmak için telaffuz edilir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/خلص.mp3', 'خلص')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="خليها على الله halliha alallah onu allah'a bırak "allah büyüktür", "nasip kısmet" anlamında, elden bir şey gelmediğinde, işler ters gittiğinde veya tamamen tevekkül edildiğinde söylenir.">
+            <div class="card-content">
+                <div class="arabic-text">خليها على الله</div>
+                <div class="pronunciation">🗣️ Halliha alallah</div>
+                <div class="meaning">💡 Onu Allah'a bırak</div>
+                <div class='description'>"Allah büyüktür", "Nasip kısmet" anlamında, elden bir şey gelmediğinde, işler ters gittiğinde veya tamamen tevekkül edildiğinde söylenir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/خليها_على_الله.mp3', 'خليها على الله')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="يعطيك العافية ya'tiik el-afiye sana afiyet versin "kolay gelsin" anlamında, çalışan, bir iş yapan veya yorulmuş birine güç ve kolaylık dilemek için her gün defalarca kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">يعطيك العافية</div>
+                <div class="pronunciation">🗣️ Ya'tiik el-afiye</div>
+                <div class="meaning">💡 Sana afiyet versin</div>
+                <div class='description'>"Kolay gelsin" anlamında, çalışan, bir iş yapan veya yorulmuş birine güç ve kolaylık dilemek için her gün defalarca kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/يعطيك_العافية.mp3', 'يعطيك العافية')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="بيّض الله وجهك beyyadallah vechek allah yüzünü ağartsın birine yaptığı büyük bir iyilikten, gösterdiği kahramanlıktan veya başarıdan dolayı derin bir minnetle teşekkür etmek, onu onurlandırmak için söylenir.">
+            <div class="card-content">
+                <div class="arabic-text">بيّض الله وجهك</div>
+                <div class="pronunciation">🗣️ Beyyadallah vechek</div>
+                <div class="meaning">💡 Allah yüzünü ağartsın</div>
+                <div class='description'>Birine yaptığı büyük bir iyilikten, gösterdiği kahramanlıktan veya başarıdan dolayı derin bir minnetle teşekkür etmek, onu onurlandırmak için söylenir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/بيّض_الله_وجهك.mp3', 'بيّض الله وجهك')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="أكل هوا ekel heva havayı yedi birinin çok saçmaladığını, boş konuştuğunu veya bir işi eline yüzüne bulaştırdığını belirtmek için alaycı bir dille kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">أكل هوا</div>
+                <div class="pronunciation">🗣️ Ekel heva</div>
+                <div class="meaning">💡 Havayı yedi</div>
+                <div class='description'>Birinin çok saçmaladığını, boş konuştuğunu veya bir işi eline yüzüne bulaştırdığını belirtmek için alaycı bir dille kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/أكل_هوا.mp3', 'أكل هوا')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="على نار ala nar ateşin üzerinde bir şeyi, bir haberi veya birini büyük bir sabırsızlıkla, yerinde duramayacak kadar büyük bir heyecanla beklemek anlamındadır.">
+            <div class="card-content">
+                <div class="arabic-text">على نار</div>
+                <div class="pronunciation">🗣️ Ala nar</div>
+                <div class="meaning">💡 Ateşin üzerinde</div>
+                <div class='description'>Bir şeyi, bir haberi veya birini büyük bir sabırsızlıkla, yerinde duramayacak kadar büyük bir heyecanla beklemek anlamındadır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/على_نار.mp3', 'على نار')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="زي العسل zey el-asel bal gibi çok güzel, harika, kusursuz ilerleyen durumlar veya çok tatlı, sevilesi insanlar için kullanılan olumlu bir benzetmedir.">
+            <div class="card-content">
+                <div class="arabic-text">زي العسل</div>
+                <div class="pronunciation">🗣️ Zey el-asel</div>
+                <div class="meaning">💡 Bal gibi</div>
+                <div class='description'>Çok güzel, harika, kusursuz ilerleyen durumlar veya çok tatlı, sevilesi insanlar için kullanılan olumlu bir benzetmedir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/زي_العسل.mp3', 'زي العسل')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="حط بالخرْج hut bil-harc çuvala koy "boşver", "duymazdan gel", "çöpe at gitsin" anlamlarında, ciddiye alınmaması gereken durumlar veya sözler için tavsiye niteliğinde söylenir.">
+            <div class="card-content">
+                <div class="arabic-text">حط بالخرْج</div>
+                <div class="pronunciation">🗣️ Hut bil-harc</div>
+                <div class="meaning">💡 Çuvala koy</div>
+                <div class='description'>"Boşver", "Duymazdan gel", "Çöpe at gitsin" anlamlarında, ciddiye alınmaması gereken durumlar veya sözler için tavsiye niteliğinde söylenir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/حط_بالخرْج.mp3', 'حط بالخرْج')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="كرمال kirmal uğruna "senin hatırın için", "senin uğruna" anlamında (kirmalek / kirmalak şeklinde) birine değer verildiğini ve onun için fedakarlık yapıldığını belirtirken kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">كرمال</div>
+                <div class="pronunciation">🗣️ Kirmal</div>
+                <div class="meaning">💡 Uğruna</div>
+                <div class='description'>"Senin hatırın için", "Senin uğruna" anlamında (Kirmalek / Kirmalak şeklinde) birine değer verildiğini ve onun için fedakarlık yapıldığını belirtirken kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/كرمال.mp3', 'كرمال')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="إيد وحدة ما بتزقف i̇d wahde ma bitzakkif tek el alkışlamaz ortak hareket etmenin önemini anlatan, yardımlaşmaya teşvik eden, türkçe karşılığı "bir elin nesi var, iki elin sesi var" olan atasözü niteliğinde bir deyimdir.">
+            <div class="card-content">
+                <div class="arabic-text">إيد وحدة ما بتزقف</div>
+                <div class="pronunciation">🗣️ İd wahde ma bitzakkif</div>
+                <div class="meaning">💡 Tek el alkışlamaz</div>
+                <div class='description'>Ortak hareket etmenin önemini anlatan, yardımlaşmaya teşvik eden, Türkçe karşılığı "Bir elin nesi var, iki elin sesi var" olan atasözü niteliğinde bir deyimdir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/إيد_وحدة_ما_بتزقف.mp3', 'إيد وحدة ما بتزقف')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="يا ريت ya reyt keşke gerçekleşmesi çok istenen ama zor olan durumlar için derin bir iç çekişle "ah keşke", "umarım öyle olur" anlamında kullanılır.">
+            <div class="card-content">
+                <div class="arabic-text">يا ريت</div>
+                <div class="pronunciation">🗣️ Ya reyt</div>
+                <div class="meaning">💡 Keşke</div>
+                <div class='description'>Gerçekleşmesi çok istenen ama zor olan durumlar için derin bir iç çekişle "Ah keşke", "Umarım öyle olur" anlamında kullanılır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/يا_ريت.mp3', 'يا ريت')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="كبّر دماغك kebbir dimağak boş ver / kafana takma moral verirken veya birini gereksiz bir konuyu uzatmaması, sakinleşmesi için teselli ederken kullanılan çok yaygın bir kalıptır.">
+            <div class="card-content">
+                <div class="arabic-text">كبّر دماغك</div>
+                <div class="pronunciation">🗣️ Kebbir dimağak</div>
+                <div class="meaning">💡 Boş ver / Kafana takma</div>
+                <div class='description'>Moral verirken veya birini gereksiz bir konuyu uzatmaması, sakinleşmesi için teselli ederken kullanılan çok yaygın bir kalıptır.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/كبّر_دماغك.mp3', 'كبّر دماغك')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+        <div class="dict-card" data-search="قرة العين kurretü'l-ayn göz nuru / göz aydınlığı (göz serinliği) i̇nsana huzur ve mutluluk veren, sevinç kaynağı olan çok sevgili eş, evlat veya yakınlar için kullanılan derin bir sevgi ifadesidir.">
+            <div class="card-content">
+                <div class="arabic-text">قرة العين</div>
+                <div class="pronunciation">🗣️ Kurretü'l-ayn</div>
+                <div class="meaning">💡 Göz nuru / Göz aydınlığı (Göz serinliği)</div>
+                <div class='description'>İnsana huzur ve mutluluk veren, sevinç kaynağı olan çok sevgili eş, evlat veya yakınlar için kullanılan derin bir sevgi ifadesidir.</div>
+            </div>
+            <button class="play-btn" onclick="playAudio('sesler/قرة_العين.mp3', 'قرة العين')" title="Sesi Oynat">🔊</button>
+        </div>
+    
+    </div>
+</div>
+
+<div class="now-playing" id="nowPlaying">
+    <span>🎵 Oynatılıyor: <b id="playingWord"></b></span>
+</div>
+
+<script>
+    let currentAudio = null;
+    const nowPlayingDiv = document.getElementById('nowPlaying');
+    const playingWordSpan = document.getElementById('playingWord');
+
+    function playAudio(path, word) {
+        // Stop currently playing audio if any
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+
+        // Show playing badge
+        playingWordSpan.textContent = word;
+        nowPlayingDiv.style.display = 'flex';
+
+        // Create new audio instance
+        currentAudio = new Audio(path);
+        
+        currentAudio.play().catch(error => {
+            console.error("Ses dosyası oynatılamadı:", error);
+            alert("Ses dosyası bulunamadı! Lütfen '" + path + "' yolunda dosyanın mevcut olduğunu kontrol edin.\n\nEksik ses dosyalarını eklediğinizde bu düğme otomatik çalışacaktır.");
+            nowPlayingDiv.style.display = 'none';
+        });
+
+        currentAudio.onended = () => {
+            nowPlayingDiv.style.display = 'none';
+        };
+    }
+
+    // Search filter function
+    const searchInput = document.getElementById('searchInput');
+    const cards = document.querySelectorAll('.dict-card');
+    const statsCount = document.getElementById('statsCount');
+
+    searchInput.addEventListener('input', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const searchContent = card.getAttribute('data-search');
+            if (searchContent.includes(query)) {
+                card.style.display = 'grid';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        statsCount.textContent = `Eşleşen ${visibleCount} deyim listeleniyor`;
+    });
+</script>
+
+</body>
+</html>
